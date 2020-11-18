@@ -3,8 +3,8 @@
 
 ## Table of contents
 * [Introduction](#Introduction)
-* [Project Aim](#technologies)
-* [Project Technical Details](#setup)
+* [Project Aim](#Project Aim)
+* [Project Technical Details](#Project Technical Details)
 
 ## Introduction
 Apache Spark is a lightning-fast cluster computing technology, designed for fast computation. It is based on Hadoop MapReduce and it extends the MapReduce model to efficiently use it for more types of computations, which includes interactive queries and stream processing. The main feature of Spark is its in-memory cluster computing that increases the processing speed of an application.
