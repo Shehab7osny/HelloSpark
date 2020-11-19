@@ -195,7 +195,6 @@ In this section, I will provide a sort of visualization some sample operations u
   result.show()
   ```
   Output:
-  |----------|
   |customerId|
   |----------|
   | 847174168|
@@ -233,7 +232,6 @@ In this section, I will provide a sort of visualization some sample operations u
   result.show()
   ```
   Output:
-  |-----|----------|-----------|
   |Month|customerId|TotalAmount|
   |-----|----------|-----------|
   |    1| 314506271|   43343.01|
