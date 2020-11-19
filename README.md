@@ -53,7 +53,7 @@ In this project I used a randomly selected dataset from [Kaggle](https://www.kag
 | Transaction Type		    |Represents the type of the credit card transaction       |
 | Is Fraud?			          |Represents whether the transaction is Fraud or not       |
 
-## Sample Operation
+## Sample Operations
 
 In this section, I will provide a sort of visualization some sample operations used in this project. For furthermore operations along with their output results, please check the following [Technical Report](https://docs.google.com/document/d/11fQVFLdn-PzKAS4yYhUaY8kSfog2MFIYcz6i1hpm3vQ/edit?usp=sharing).
 
