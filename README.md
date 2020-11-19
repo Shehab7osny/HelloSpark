@@ -57,14 +57,14 @@ In this project I used a randomly selected dataset from [Kaggle](https://www.kag
 
 In this section, I will provide a sort of visualization some sample operations used in this project. For furthermore operations along with their output results, please check the following [Technical Report](https://docs.google.com/document/d/11fQVFLdn-PzKAS4yYhUaY8kSfog2MFIYcz6i1hpm3vQ/edit?usp=sharing).
 
-* ### Operation #1: Load data from CSV into a Spark Data Frame
+* ### Operation #1: Load data from CSV into a Spark Data Frame:
 
   Code Snippet:
   ```Scala
   val transactions = spark.read.format("csv").option("header", "true").load("/home/transactions.csv")
   ```
   
-* ### Operation #2: Load data from Parquet Table into a Spark Data Frame
+* ### Operation #2: Load data from Parquet Table into a Spark Data Frame:
 
   Code Snippet:
   ```Scala
@@ -72,7 +72,7 @@ In this section, I will provide a sort of visualization some sample operations u
   val df = spark.sql("SELECT * FROM bdp.hv_parq")
   ```
 
-* ### Operation #3: Find out how many Fraud Transactions are there
+* ### Operation #3: Find out how many Fraud Transactions are there:
 
   Code Snippet:
   ```Scala
@@ -127,3 +127,118 @@ In this section, I will provide a sort of visualization some sample operations u
   
   ![README Image 8](https://user-images.githubusercontent.com/36346614/99654456-05101100-2a63-11eb-9b38-d5bb6810081e.png)
   
+* ### Operation #6: Find out the number of customers that go to the gym and eat fast food:
+
+  Code Snippet:
+  ```Scala
+  transactions.createOrReplaceTempView("TransactionsTable")
+  val snippet = spark.sql(
+  """SELECT COUNT(*) FROM (
+  (SELECT customerId FROM TransactionsTable WHERE merchantCategoryCode='gym' 
+  GROUP BY customerId) 
+  INTERSECT 
+  (SELECT customerId FROM TransactionsTable WHERE merchantCategoryCode='fastfood' GROUP BY customerId))""")
+  val results = snippet.collect()
+  results.foreach(println)
+  ```
+  Output:
+  ```Scala
+  90
+  ```
+  
+* ### Operation #7: Find out the customers who tried McDonalds before Hardee's and never tried Five Guys:
+
+  Code Snippet:
+  ```Scala
+  val mcdonalds = spark.sql(
+      """
+      SELECT customerId, MIN(transactionDate) AS startDate
+      FROM TransactionsTable
+      WHERE merchantName LIKE 'McDonalds%'
+      GROUP BY customerId
+      ORDER BY MIN(transactionDate)
+      """)
+    
+  val hardees = spark.sql(
+      """
+      SELECT customerId, MIN(transactionDate) AS startDate
+      FROM TransactionsTable
+      WHERE merchantName LIKE "Hardee's%"
+      GROUP BY customerId
+      ORDER BY MIN(transactionDate)
+      """)
+      
+  mcdonalds.createOrReplaceTempView("McDonalds_Table")
+  hardees.createOrReplaceTempView("Hardees_Table")
+  
+  val Mc_Hardees = spark.sql(
+      """
+      SELECT McDonalds_Table.customerId
+      FROM McDonalds_Table JOIN Hardees_Table
+          ON McDonalds_Table.customerId = Hardees_Table.customerId
+      WHERE McDonalds_Table.startDate < Hardees_Table.startDate
+      """)
+ 
+  Mc_Hardees.createOrReplaceTempView("McHardees")
+ 
+  val result = spark.sql(
+  """
+  (SELECT customerId
+        FROM McHardees)
+        EXCEPT
+        (SELECT customerId
+        FROM TransactionsTable
+        WHERE merchantName LIKE 'Five Guys%'
+        GROUP BY customerId)
+    """)
+ 
+  result.show()
+  ```
+  Output:
+  |----------|
+  |customerId|
+  |----------|
+  | 847174168|
+  | 667315366|
+  | 477081008|
+
+* ### Operation #8: Find out top 3 customers total spending on food/fast food/food delivery on each month:
+
+  Code Snippet:
+  ```Scala
+  val foodCustomers = spark.sql(
+      """
+         SELECT customerId, transactionAmount, MONTH(transactionDate) AS Month
+         FROM TransactionsTable
+         WHERE
+            merchantCategoryCode='fastfood' OR
+            merchantCategoryCode='food' OR
+            merchantCategoryCode='food_delivery'
+         ORDER BY Month
+      """)
+    foodCustomers.createOrReplaceTempView("FoodCustomers")
+ 
+    val result = spark.sql(
+      """
+        Select Month, customerId, TotalAmount FROM (
+        Select Month, customerId, TotalAmount, row_number() over(partition by Month
+		ORDER BY Month, TotalAmount Desc) as rn
+        FROM(
+        SELECT  Month, customerId, Round(Sum(transactionAmount), 2) as TotalAmount
+        FROM    FoodCustomers
+        GROUP BY Month, customerId) as Rank) as Result
+        WHERE rn <= 3
+      """)
+      
+  result.show()
+  ```
+  Output:
+  |-----|----------|-----------|
+  |Month|customerId|TotalAmount|
+  |-----|----------|-----------|
+  |    1| 314506271|   43343.01|
+  |    1| 456044564|   41831.58|
+  |    1| 772212779|   38482.51|
+  |    2| 314506271|   36458.69|
+  |    2| 772212779|   31741.49|
+
